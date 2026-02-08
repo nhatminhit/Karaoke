@@ -697,7 +697,10 @@ function startMarqueeTracker() {
 
 function stopMarqueeTracker() {
     if (marqueeInterval) clearInterval(marqueeInterval);
-    if (upcomingMarquee) upcomingMarquee.style.display = 'none';
+    if (upcomingMarquee) {
+        upcomingMarquee.style.display = 'none';
+        document.body.classList.remove('show-marquee');
+    }
 }
 
 function updateMarqueeStatus() {
@@ -707,29 +710,25 @@ function updateMarqueeStatus() {
     }
 
     try {
-        const currentTime = player.getCurrentTime();
-        const duration = player.getDuration();
+        // Show marquee whenever queue is not empty
+        if (currentRoom.queue.length > 0) {
+            const nextSongs = currentRoom.queue.slice(0, 3);
+            const songText = nextSongs.map((song, idx) => `${idx + 1}. ${song.title} (@${song.addedByName})`).join('  |  ');
+            const fullText = songText;
 
-        if (duration <= 0) return;
-
-        const remainingTime = duration - currentTime;
-
-        // Show marquee when progress > 50% and queue is not empty
-        if (currentTime > (duration / 2) && currentRoom.queue.length > 0) {
-            const nextSong = currentRoom.queue[0];
-            const songText = `1. ${nextSong.title} (Bởi @${nextSong.addedByName})`;
-
-            if (marqueeContent.textContent !== songText) {
-                marqueeContent.textContent = songText;
+            if (marqueeContent.textContent !== fullText) {
+                marqueeContent.textContent = fullText;
             }
 
             if (upcomingMarquee && upcomingMarquee.style.display === 'none') {
                 upcomingMarquee.style.display = 'flex';
+                document.body.classList.add('show-marquee');
                 console.log('Showing upcoming song marquee (half-way point reached)');
             }
         } else {
             if (upcomingMarquee && upcomingMarquee.style.display !== 'none') {
                 upcomingMarquee.style.display = 'none';
+                document.body.classList.remove('show-marquee');
             }
         }
     } catch (e) {

@@ -108,7 +108,12 @@
     background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
     border-bottom: none !important;
     padding: 1.5rem 2rem !important;
-    transition: opacity 0.5s ease;
+    transition: all 0.5s ease;
+}
+
+.show-marquee .room-header {
+    top: 45px;
+    /* Shift down when marquee is at top: 0 */
 }
 
 /* Horizontal Queue (Overlay Bottom - trên Controls) */
@@ -296,22 +301,24 @@
 /* Upcoming Marquee Styles */
 .upcoming-marquee {
     position: absolute;
-    bottom: 110px;
+    top: 0;
     left: 0;
     right: 0;
-    z-index: 15;
-    background: rgba(0, 0, 0, 0.8);
+    z-index: 25;
+    /* Higher than header and QR code to be visible */
+    background: linear-gradient(90deg, #ff0080, #7928ca);
+    /* Brighter Neon Gradient */
     color: #fff;
     padding: 0;
     overflow: hidden;
     pointer-events: none;
-    border-top: 1px solid rgba(139, 92, 246, 0.5);
-    border-bottom: 1px solid rgba(139, 92, 246, 0.5);
-    backdrop-filter: blur(15px);
-    height: 45px;
+    border-bottom: 2px solid #fff;
+    backdrop-filter: blur(20px);
+    height: 50px;
+    /* Slightly taller */
     display: flex;
     align-items: center;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 4px 20px rgba(255, 0, 128, 0.6);
 }
 
 .marquee-wrapper {
@@ -324,31 +331,32 @@
 }
 
 .marquee-label {
-    background: var(--primary);
-    color: #fff;
-    padding: 0 15px;
+    background: #fff;
+    color: #000;
+    padding: 0 20px;
     font-weight: 900;
     height: 100%;
     display: flex;
     align-items: center;
     z-index: 20;
-    box-shadow: 5px 0 15px rgba(0, 0, 0, 0.5);
+    box-shadow: 10px 0 20px rgba(0, 0, 0, 0.3);
     white-space: nowrap;
-    font-size: 0.85rem;
+    font-size: 1rem;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
 }
 
 .marquee-content {
     display: inline-block;
     white-space: nowrap;
-    animation: marquee-animation 20s linear infinite;
-    font-size: 1.25rem;
-    font-weight: 600;
-    padding-left: 20px;
-    color: #ffd700;
-    /* Gold/Yellow for high visibility */
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 1);
+    animation: marquee-animation 15s linear infinite;
+    /* Slightly faster */
+    font-size: 1.5rem;
+    /* Larger font */
+    font-weight: 800;
+    padding-left: 30px;
+    color: #ffffff;
+    text-shadow: 0 0 10px rgba(0, 0, 0, 1), 0 0 20px rgba(255, 255, 255, 0.5);
     position: absolute;
     left: 0;
 }
@@ -375,7 +383,7 @@
 .qr-code-overlay {
     position: absolute;
     top: 70px;
-    /* Below header */
+    /* Default below header */
     left: 15px;
     z-index: 20;
     /* Above player, below header */
@@ -387,6 +395,11 @@
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
     transition: all 0.3s ease;
     animation: qrFadeIn 0.5s ease;
+}
+
+.show-marquee .qr-code-overlay {
+    top: 115px;
+    /* Shift down when marquee is present */
 }
 
 @keyframes qrFadeIn {
