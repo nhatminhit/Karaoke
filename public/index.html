@@ -17,26 +17,25 @@
     </header>
 
     <main class="main">
-      <!-- User Info -->
-      <div class="user-info" id="userInfo">
-        <h2 style="margin-bottom: 1rem;">🎤 Bắt Đầu Hát Karaoke</h2>
-        <input type="text" id="userNameInput" placeholder="Nhập tên của bạn..." maxlength="20">
-        <button id="setNameBtn" class="btn btn-primary">Tạo Phòng</button>
-        <p class="hint-text" style="margin-top: 1rem;">✨ Hệ thống sẽ tự động tạo phòng riêng với ID 6 số cho bạn</p>
-      </div>
-
-      <!-- Main Actions (hidden until user sets name) -->
-      <div class="actions" id="mainActions" style="display: none;">
+      <!-- Main Actions -->
+      <div class="actions" id="mainActions">
+        <h2 style="margin-bottom: 2rem; text-align: center;">🎤 Bắt Đầu Hát Karaoke</h2>
         <div class="action-cards">
+          <div class="action-card" id="createRoomCard">
+            <div class="card-icon">✨</div>
+            <h3>Tạo Phòng Mới</h3>
+            <p>Tạo phòng karaoke riêng với ID 6 số</p>
+            <button class="btn btn-primary" id="createRoomBtn">Tạo Phòng Ngay</button>
+          </div>
+
           <div class="action-card" id="joinRoomCard">
             <div class="card-icon">🎵</div>
             <h3>Tham Gia Phòng</h3>
-            <p>Nhập Room ID để tham gia (hoặc tự động tạo phòng mới)</p>
+            <p>Nhập Room ID để tham gia phòng có sẵn</p>
             <div class="join-input-group">
-              <input type="text" id="roomIdInput" placeholder="Nhập Room ID (VD: ABC123)..." maxlength="6">
+              <input type="text" id="roomIdInput" placeholder="Nhập Room ID (6 số)..." maxlength="6">
               <button class="btn btn-primary" id="joinRoomBtn">Tham Gia</button>
             </div>
-            <p class="hint-text">💡 Nếu Room ID chưa tồn tại, phòng sẽ được tự động tạo!</p>
           </div>
         </div>
       </div>

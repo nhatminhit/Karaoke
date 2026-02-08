@@ -1,19 +1,14 @@
 // ===================================
-// APP.JS - Auto Join Room Logic
+// APP.JS - Homepage Logic
 // ===================================
 
 // Connect to Socket.io server
 const socket = io();
 
 // DOM Elements
-const userNameInput = document.getElementById('userNameInput');
-const setNameBtn = document.getElementById('setNameBtn');
-const userInfo = document.getElementById('userInfo');
-const mainActions = document.getElementById('mainActions');
-
+const createRoomBtn = document.getElementById('createRoomBtn');
 const joinRoomBtn = document.getElementById('joinRoomBtn');
 const roomIdInput = document.getElementById('roomIdInput');
-
 const loading = document.getElementById('loading');
 
 // State
@@ -26,79 +21,50 @@ let currentUser = {
 // INITIALIZATION
 // ===================================
 
-// Check if user already has a name in localStorage
 window.addEventListener('DOMContentLoaded', () => {
+    // Auto-generate user if not exists
     const savedUser = localStorage.getItem('karaokeUser');
     if (savedUser) {
-        const user = JSON.parse(savedUser);
-        currentUser = user;
-
-        // Auto-join room
-        autoJoinRoom();
+        currentUser = JSON.parse(savedUser);
+    } else {
+        // Create guest user
+        const guestNumber = Math.floor(Math.random() * 9000) + 1000;
+        currentUser = {
+            userId: 'user_' + Math.random().toString(36).substr(2, 9),
+            userName: `Guest ${guestNumber}`
+        };
+        localStorage.setItem('karaokeUser', JSON.stringify(currentUser));
     }
 });
 
 // ===================================
-// USER SETUP
+// CREATE ROOM
 // ===================================
 
-setNameBtn.addEventListener('click', () => {
-    const userName = userNameInput.value.trim();
-
-    if (!userName || userName.length < 2) {
-        alert('Vui lòng nhập tên của bạn (ít nhất 2 ký tự)');
-        return;
-    }
-
-    // Generate unique user ID
-    currentUser.userId = generateUserId();
-    currentUser.userName = userName;
-
-    // Save to localStorage
-    localStorage.setItem('karaokeUser', JSON.stringify(currentUser));
-
-    // Auto-join room immediately
-    autoJoinRoom();
+createRoomBtn.addEventListener('click', () => {
+    const roomId = generateRoomId();
+    showLoading('Đang tạo phòng...');
+    joinRoom(roomId);
 });
-
-userNameInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        setNameBtn.click();
-    }
-});
-
-// ===================================
-// AUTO JOIN ROOM
-// ===================================
 
 function generateRoomId() {
     // Generate 6-digit numeric room ID
     return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-function autoJoinRoom() {
-    // Check if user already has a room (from localStorage)
-    let roomId = localStorage.getItem('currentRoomId');
+// ===================================
+// JOIN ROOM
+// ===================================
 
-    // If no saved room or want to create new, generate 6-digit ID
-    if (!roomId) {
-        roomId = generateRoomId();
-        localStorage.setItem('currentRoomId', roomId);
-    }
-
-    showLoading('Đang tạo phòng...');
-    joinRoom(roomId);
-}
-
-// Manual join (if user wants to change room)
 joinRoomBtn.addEventListener('click', () => {
-    const roomId = roomIdInput.value.trim().toUpperCase();
+    const roomId = roomIdInput.value.trim();
 
-    if (!roomId || roomId.length < 3) {
-        alert('Vui lòng nhập Room ID hợp lệ (ít nhất 3 ký tự)');
+    if (!roomId || roomId.length !== 6) {
+        alert('Vui lòng nhập Room ID 6 số');
         return;
     }
 
+    showLoading('Đang tham gia phòng...');
     joinRoom(roomId);
 });
 
@@ -108,14 +74,12 @@ roomIdInput.addEventListener('keypress', (e) => {
     }
 });
 
-// Auto-uppercase room ID input
+// Only allow numbers
 roomIdInput.addEventListener('input', (e) => {
-    e.target.value = e.target.value.toUpperCase();
+    e.target.value = e.target.value.replace(/[^0-9]/g, '');
 });
 
 async function joinRoom(roomId) {
-    showLoading('Đang tham gia phòng...');
-
     try {
         const response = await fetch(`/api/rooms/${roomId}`);
         const data = await response.json();
@@ -138,16 +102,6 @@ async function joinRoom(roomId) {
 // UTILITY FUNCTIONS
 // ===================================
 
-function generateUserId() {
-    return 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-}
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
 function showLoading(message = 'Đang tải...') {
     loading.querySelector('p').textContent = message;
     loading.style.display = 'flex';
@@ -164,7 +118,6 @@ function hideLoading() {
 socket.on('connect_error', (error) => {
     console.error('Connection error:', error);
     hideLoading();
-    userInfo.style.display = 'block';
 });
 
 socket.on('error', (data) => {
