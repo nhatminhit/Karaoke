@@ -128,6 +128,16 @@
         <div class="search-container">
             <h3 style="margin-bottom: 1rem;">🔍 Tìm Bài Hát</h3>
 
+            <!-- Search Type Toggle -->
+            <div
+                style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem; background: var(--bg-input); border-radius: var(--radius-sm);">
+                <input type="checkbox" id="karaokeOnlyToggle" checked
+                    style="width: 18px; height: 18px; cursor: pointer;">
+                <label for="karaokeOnlyToggle" style="cursor: pointer; user-select: none; flex: 1;">
+                    🎤 Chỉ tìm bài Karaoke
+                </label>
+            </div>
+
             <div class="search-box">
                 <input type="text" id="mobileSearchInput" placeholder="Nhập tên bài hát..." style="flex: 1;">
                 <button class="btn btn-primary" id="mobileSearchBtn">Tìm</button>

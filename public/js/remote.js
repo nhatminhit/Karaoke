@@ -144,6 +144,8 @@ mobileSearchInput.addEventListener('keypress', (e) => {
 
 async function searchSongs() {
     const query = mobileSearchInput.value.trim();
+    const karaokeOnlyToggle = document.getElementById('karaokeOnlyToggle');
+    const karaokeOnly = karaokeOnlyToggle ? karaokeOnlyToggle.checked : true;
 
     if (!query) {
         alert('Vui lòng nhập tên bài hát');
@@ -152,8 +154,11 @@ async function searchSongs() {
 
     mobileSearchResults.innerHTML = '<p style="padding: 1rem; text-align: center;">🔍 Đang tìm kiếm...</p>';
 
+    // Add "karaoke" to query if toggle is checked
+    const searchQuery = karaokeOnly ? `${query} karaoke` : query;
+
     try {
-        const response = await fetch(`/api/search?query=${encodeURIComponent(query)}`);
+        const response = await fetch(`/api/search?query=${encodeURIComponent(searchQuery)}`);
         const data = await response.json();
 
         if (!data.success) {
@@ -184,7 +189,7 @@ async function searchSongs() {
             `).join('');
         } else {
             // Fallback: Manual Video ID input
-            const searchUrl = data.searchUrl || `https://www.youtube.com/results?search_query=${encodeURIComponent(query + ' karaoke')}`;
+            const searchUrl = data.searchUrl || `https://www.youtube.com/results?search_query=${encodeURIComponent(searchQuery)}`;
 
             mobileSearchResults.innerHTML = `
                 <p style="padding: 1rem; color: var(--text-secondary); font-size: 0.875rem;">
