@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📱 Remote Control - Karaoke</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Mobile Remote Specific Styles */
+        body {
+            padding: 0;
+            margin: 0;
+        }
+
+        .remote-container {
+            max-width: 100%;
+            min-height: 100vh;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .remote-header {
+            background: var(--bg-card);
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .remote-header h1 {
+            font-size: 1.5rem;
+            margin: 0 0 0.5rem 0;
+        }
+
+        .room-code {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary);
+            letter-spacing: 3px;
+            font-family: monospace;
+        }
+
+        .search-container {
+            background: var(--bg-card);
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            flex: 1;
+        }
+
+        .priority-toggle {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            background: var(--bg-input);
+            padding: 0.5rem;
+            border-radius: var(--radius-sm);
+        }
+
+        .priority-btn {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid transparent;
+            border-radius: var(--radius-sm);
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .priority-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .queue-preview {
+            background: var(--bg-card);
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            margin-top: 1rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .queue-preview h3 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="joinScreen" class="remote-container"
+        style="display: none; justify-content: center; align-items: center; background: var(--bg-main);">
+        <div
+            style="width: 100%; max-width: 320px; background: var(--bg-card); padding: 2rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); text-align: center;">
+            <h1 style="font-size: 1.5rem; margin-bottom: 0.5rem;">🎤 Kết Nối Remote</h1>
+            <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 2rem;">Nhập mã phòng 6 số để điều
+                khiển</p>
+
+            <div style="margin-bottom: 2rem; text-align: left;">
+                <label
+                    style="display: block; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem; color: var(--primary);">Mã
+                    phòng (6 số)</label>
+                <input type="number" id="joinRoomId" placeholder="123456" maxlength="6"
+                    style="width: 100%; padding: 0.75rem; background: var(--bg-input); border: 2px solid var(--primary); border-radius: var(--radius-md); color: white; font-size: 1.5rem; letter-spacing: 5px; text-align: center; font-family: monospace;">
+            </div>
+
+            <button class="btn btn-primary" id="joinBtn"
+                style="width: 100%; padding: 1rem; font-weight: bold; font-size: 1rem;">KẾT NỐI NGAY 🚀</button>
+        </div>
+    </div>
+
+    <div id="remoteControlScreen" class="remote-container" style="display: none;">
+        <!-- Header with Room Code -->
+        <div class="remote-header">
+            <h1>📱 Remote Control</h1>
+            <div class="room-code" id="remoteRoomCode">------</div>
+            <p style="color: var(--text-muted); font-size: 0.875rem; margin: 0.5rem 0 0 0;">
+                Phòng: <span id="remoteRoomName">...</span>
+            </p>
+        </div>
+
+        <!-- Search Section -->
+        <div class="search-container">
+            <h3 style="margin-bottom: 1rem;">🔍 Tìm Bài Hát</h3>
+
+            <div class="search-box">
+                <input type="text" id="mobileSearchInput" placeholder="Nhập tên bài hát..." style="flex: 1;">
+                <button class="btn btn-primary" id="mobileSearchBtn">Tìm</button>
+            </div>
+
+            <div id="mobileSearchResults" style="margin-top: 1rem;">
+                <!-- Search results will appear here -->
+            </div>
+        </div>
+
+        <!-- Playback Controls -->
+        <div class="playback-controls"
+            style="background: var(--bg-card); padding: 1rem; border-radius: var(--radius-md); margin-top: 1rem;">
+            <h3 style="margin-bottom: 1rem;">🎮 Điều Khiển</h3>
+            <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                <button class="btn btn-secondary" onclick="remoteControl('prev')" style="flex: 1;">⏮ Trước</button>
+                <button class="btn btn-primary" onclick="remoteControl('play')" id="remotePlayBtn"
+                    style="flex: 1;">▶️</button>
+                <button class="btn btn-secondary" onclick="remoteControl('next')" style="flex: 1;">⏭ Kế tiếp</button>
+            </div>
+        </div>
+
+        <!-- Full Queue List -->
+        <div class="queue-full"
+            style="background: var(--bg-card); padding: 1rem; border-radius: var(--radius-md); margin-top: 1rem; flex: 1; overflow-y: auto;">
+            <h3 style="margin-bottom: 1rem;">📝 Hàng Đợi (<span id="mobileQueueCount">0</span>)</h3>
+            <div id="mobileQueueList">
+                <p class="empty-queue">Chưa có bài hát</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/remote.js"></script>
+</body>
+
+</html>

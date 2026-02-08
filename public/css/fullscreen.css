@@ -1,0 +1,478 @@
+/* ===================================
+   TRUE FULLSCREEN / CINEMA MODE
+   =================================== */
+
+/* Fullscreen Container */
+.room-layout-fullscreen {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: #000;
+}
+
+.room-main-fullscreen {
+    width: 100%;
+    height: 100%;
+}
+
+/* Player takes 100% of the screen */
+.player-container-fullscreen {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    background: #000;
+}
+
+.player-container-fullscreen #player {
+    width: 100%;
+    height: 100%;
+}
+
+/* Auto-play Prompt Overlay */
+.autoplay-prompt {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    animation: fadeIn 0.3s ease;
+}
+
+.autoplay-btn {
+    background: var(--gradient-primary);
+    border: none;
+    padding: 2rem 4rem;
+    border-radius: 2rem;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 32px rgba(139, 92, 246, 0.5);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.autoplay-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 12px 48px rgba(139, 92, 246, 0.7);
+}
+
+.autoplay-btn:active {
+    transform: scale(1.05);
+}
+
+.play-icon {
+    font-size: 4rem;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+}
+
+.play-text {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+/* Floating Header (Overlay top) */
+.room-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
+    border-bottom: none !important;
+    padding: 1.5rem 2rem !important;
+    transition: opacity 0.5s ease;
+}
+
+/* Horizontal Queue (Overlay Bottom - trên Controls) */
+.queue-horizontal {
+    display: none;
+    /* Hide queue by default on desktop/TV view */
+    position: absolute;
+    bottom: 80px;
+    left: 0;
+    right: 0;
+    z-index: 8;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
+    border-top: none !important;
+    height: auto !important;
+    padding: 1rem 2rem !important;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.queue-horizontal h3 {
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+    margin-bottom: 0.5rem !important;
+}
+
+.queue-horizontal-list {
+    display: flex;
+    gap: 1.5rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 0.5rem;
+}
+
+/* Horizontal Queue Items - Transparent Blur Style */
+.queue-horizontal-list .queue-item {
+    min-width: 240px;
+    max-width: 240px;
+    background: rgba(30, 41, 59, 0.7) !important;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    color: #fff;
+}
+
+.queue-horizontal-list .queue-item:hover {
+    background: rgba(139, 92, 246, 0.4) !important;
+    border-color: var(--primary) !important;
+    transform: translateY(-5px);
+}
+
+.queue-horizontal-list .queue-item .queue-item-info h4 {
+    font-size: 0.95rem;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.queue-horizontal-list .queue-item .queue-item-info p {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0;
+}
+
+/* Floating Controls (Bottom) */
+.controls-floating {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    background: rgba(15, 23, 42, 0.9) !important;
+    backdrop-filter: blur(10px);
+    padding: 0.75rem 2rem !important;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    height: 80px;
+    box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.5);
+}
+
+.controls-floating .control-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.controls-floating .control-btn:hover {
+    background: var(--primary);
+    transform: scale(1.1);
+}
+
+.controls-floating .play-btn {
+    width: 50px;
+    height: 50px;
+    background: var(--gradient-primary);
+}
+
+.controls-floating .volume-control {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 0 0 150px;
+    color: #fff;
+}
+
+/* Now Playing Compact Info */
+.now-playing-compact {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-left: auto;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(5px);
+    border-radius: var(--radius-md);
+    max-width: 300px;
+    color: #fff;
+}
+
+.now-playing-compact img {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+}
+
+/* Hover effects for UI auto-focus */
+.room-header {
+    opacity: 1;
+    transition: opacity 0.5s ease;
+}
+
+/* Hide controls by default when playing, show only on hover */
+.controls-floating {
+    opacity: 1;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* When a song is active, we hide the bar and pull it down slightly */
+.song-is-playing .controls-floating {
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+/* Show back when hovering the bottom area */
+.controls-floating:hover {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+}
+
+.queue-horizontal {
+    opacity: 1;
+    transition: opacity 0.5s ease;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .queue-horizontal {
+        bottom: 140px;
+    }
+
+    .controls-floating {
+        height: auto;
+        flex-direction: column;
+        padding: 1rem !important;
+        gap: 0.5rem;
+    }
+
+    .now-playing-compact {
+        width: 100%;
+        max-width: none;
+    }
+}
+
+/* Upcoming Marquee Styles */
+.upcoming-marquee {
+    position: absolute;
+    bottom: 110px;
+    left: 0;
+    right: 0;
+    z-index: 15;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 0;
+    overflow: hidden;
+    pointer-events: none;
+    border-top: 1px solid rgba(139, 92, 246, 0.5);
+    border-bottom: 1px solid rgba(139, 92, 246, 0.5);
+    backdrop-filter: blur(15px);
+    height: 45px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.marquee-wrapper {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.marquee-label {
+    background: var(--primary);
+    color: #fff;
+    padding: 0 15px;
+    font-weight: 900;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    z-index: 20;
+    box-shadow: 5px 0 15px rgba(0, 0, 0, 0.5);
+    white-space: nowrap;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.marquee-content {
+    display: inline-block;
+    white-space: nowrap;
+    animation: marquee-animation 20s linear infinite;
+    font-size: 1.25rem;
+    font-weight: 600;
+    padding-left: 20px;
+    color: #ffd700;
+    /* Gold/Yellow for high visibility */
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 1);
+    position: absolute;
+    left: 0;
+}
+
+@keyframes marquee-animation {
+    0% {
+        transform: translateX(100vw);
+    }
+
+    100% {
+        transform: translateX(-100%);
+    }
+}
+
+/* Cinema Dim Mode */
+.cinema-dim .upcoming-marquee {
+    opacity: 0.3;
+}
+
+/* ===================================
+   QR CODE OVERLAY (Top-Left Corner)
+   Professional Karaoke Style - Compact & Subtle
+   =================================== */
+.qr-code-overlay {
+    position: absolute;
+    top: 70px;
+    /* Below header */
+    left: 15px;
+    z-index: 20;
+    /* Above player, below header */
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(8px);
+    padding: 0.5rem;
+    border-radius: 8px;
+    border: 1px solid rgba(139, 92, 246, 0.4);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+    transition: all 0.3s ease;
+    animation: qrFadeIn 0.5s ease;
+}
+
+@keyframes qrFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.qr-code-overlay:hover {
+    transform: scale(1.02);
+    border-color: rgba(139, 92, 246, 0.6);
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.5);
+}
+
+.qr-code-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+#qrCodeCanvas {
+    background: white;
+    padding: 0.3rem;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#qrCodeCanvas img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+.qr-code-label {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.65rem;
+    font-weight: 500;
+    text-align: center;
+    margin: 0;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+    letter-spacing: 0.3px;
+}
+
+/* Hide QR code when in cinema dim mode (optional) */
+.cinema-dim .qr-code-overlay {
+    opacity: 0.4;
+    transition: opacity 0.5s ease;
+}
+
+.cinema-dim .qr-code-overlay:hover {
+    opacity: 1;
+}
+
+/* Hide QR code when song is playing (auto-hide) */
+.song-is-playing .qr-code-overlay {
+    opacity: 0.3;
+    transform: scale(0.9);
+}
+
+.song-is-playing .qr-code-overlay:hover {
+    opacity: 1;
+    transform: scale(1.05);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .qr-code-overlay {
+        top: 60px;
+        left: 10px;
+        padding: 0.75rem;
+    }
+
+    #qrCodeCanvas {
+        padding: 0.4rem;
+    }
+
+    .qr-code-label {
+        font-size: 0.75rem;
+    }
+}

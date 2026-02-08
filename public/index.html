@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎤 Karaoke Web - Hát Cùng Bạn Bè</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+  <!-- Homepage/Lobby -->
+  <div class="container">
+    <header class="header">
+      <h1>🎤 Karaoke Web</h1>
+      <p class="tagline">Hát karaoke cùng bạn bè, mọi lúc mọi nơi</p>
+    </header>
+
+    <main class="main">
+      <!-- User Info -->
+      <div class="user-info" id="userInfo">
+        <h2 style="margin-bottom: 1rem;">🎤 Bắt Đầu Hát Karaoke</h2>
+        <input type="text" id="userNameInput" placeholder="Nhập tên của bạn..." maxlength="20">
+        <button id="setNameBtn" class="btn btn-primary">Tạo Phòng</button>
+        <p class="hint-text" style="margin-top: 1rem;">✨ Hệ thống sẽ tự động tạo phòng riêng với ID 6 số cho bạn</p>
+      </div>
+
+      <!-- Main Actions (hidden until user sets name) -->
+      <div class="actions" id="mainActions" style="display: none;">
+        <div class="action-cards">
+          <div class="action-card" id="joinRoomCard">
+            <div class="card-icon">🎵</div>
+            <h3>Tham Gia Phòng</h3>
+            <p>Nhập Room ID để tham gia (hoặc tự động tạo phòng mới)</p>
+            <div class="join-input-group">
+              <input type="text" id="roomIdInput" placeholder="Nhập Room ID (VD: ABC123)..." maxlength="6">
+              <button class="btn btn-primary" id="joinRoomBtn">Tham Gia</button>
+            </div>
+            <p class="hint-text">💡 Nếu Room ID chưa tồn tại, phòng sẽ được tự động tạo!</p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Loading Indicator -->
+    <div class="loading" id="loading" style="display: none;">
+      <div class="spinner"></div>
+      <p>Đang kết nối...</p>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="js/app.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,33 @@
+{
+  "name": "web-karaoke-multi-room",
+  "version": "1.0.0",
+  "description": "Multi-room karaoke web application with real-time synchronization",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "build": "echo 'No build step required'"
+  },
+  "engines": {
+    "node": ">=18.x"
+  },
+  "keywords": [
+    "karaoke",
+    "websocket",
+    "youtube",
+    "multi-room"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "nanoid": "^3.3.6",
+    "node-fetch": "^2.7.0",
+    "socket.io": "^4.6.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  }
+}

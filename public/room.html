@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎤 Karaoke Room</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/fullscreen.css">
+</head>
+
+<body class="room-page">
+    <div class="room-container">
+        <!-- Header -->
+        <header class="room-header">
+            <div class="room-info">
+                <h1 id="roomName">Phòng Karaoke</h1>
+                <div class="room-meta">
+                    <span class="room-id">ID: <strong id="roomIdDisplay">------</strong></span>
+                    <span class="member-count">👥 <span id="memberCount">0</span> người</span>
+                </div>
+            </div>
+            <div class="room-actions">
+                <button class="btn btn-primary btn-small" id="openRemoteBtn">📱 Điều Khiển</button>
+                <button class="btn btn-small" id="shareBtn">📤 Chia Sẻ</button>
+                <button class="btn btn-danger btn-small" id="leaveRoomBtn">🚪 Rời Phòng</button>
+            </div>
+        </header>
+
+        <div class="room-layout-fullscreen">
+            <!-- Main Content - Fullscreen -->
+            <div class="room-main-fullscreen">
+                <!-- YouTube Player - Fullscreen -->
+                <div class="player-container-fullscreen">
+                    <div id="player"></div>
+                    <!-- QR Code for Remote Control -->
+                    <div class="qr-code-overlay" id="qrCodeOverlay">
+                        <div class="qr-code-container">
+                            <div id="qrCodeCanvas"></div>
+                            <p class="qr-code-label">📱 Quét để chọn bài</p>
+                        </div>
+                    </div>
+                    <!-- Upcoming Songs Marquee -->
+                    <div class="upcoming-marquee" id="upcomingMarquee" style="display: none;">
+                        <div class="marquee-wrapper">
+                            <span class="marquee-label">TIẾP THEO:</span>
+                            <div class="marquee-content" id="marqueeContent"></div>
+                        </div>
+                    </div>
+                    <div class="no-song" id="noSong">
+                        <p>🎵 Chưa có bài hát nào</p>
+                        <p>Mở Remote Control (📱) để thêm bài!</p>
+                    </div>
+                    <!-- Auto-play Prompt Overlay -->
+                    <div class="autoplay-prompt" id="autoplayPrompt" style="display: none;">
+                        <button class="autoplay-btn" id="autoplayBtn">
+                            <span class="play-icon">▶️</span>
+                            <span class="play-text">Bắt đầu phát</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Horizontal Queue Below Player -->
+                <div class="queue-horizontal">
+                    <h3>📋 Hàng Đợi (<span id="queueCount">0</span>)</h3>
+                    <div class="queue-horizontal-list" id="queueList">
+                        <p class="empty-queue">Chưa có bài hát trong hàng đợi</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar - Hidden by default, toggle with button -->
+            <aside class="room-sidebar-compact" id="roomSidebar" style="display: none;">
+                <!-- Search Songs - HIDDEN ON DESKTOP, USE MOBILE REMOTE -->
+                <div class="search-section" style="display: none;">
+                    <h3>🔍 Tìm Bài Hát</h3>
+                    <div class="search-box">
+                        <input type="text" id="searchInput" placeholder="Tên bài hát, ca sĩ..." autocomplete="off">
+                        <button id="searchBtn" class="btn btn-primary">Tìm</button>
+                    </div>
+                    <div class="search-results" id="searchResults"></div>
+                </div>
+
+                <!-- Members -->
+                <div class="members-section">
+                    <h3>👥 Thành Viên (<span id="membersCount">0</span>)</h3>
+                    <div class="members-list" id="membersList"></div>
+                </div>
+
+                <!-- Chat -->
+                <div class="chat-section">
+                    <h3>💬 Chat</h3>
+                    <div class="chat-messages" id="chatMessages"></div>
+                    <div class="chat-input-group">
+                        <input type="text" id="chatInput" placeholder="Nhập tin nhắn..." maxlength="200">
+                        <button id="sendChatBtn" class="btn btn-primary">📤</button>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <!-- Player Controls Floating -->
+    <div class="controls-floating">
+        <button class="control-btn" id="prevBtn" title="Bài trước">⏮</button>
+        <button class="control-btn play-btn" id="playPauseBtn" title="Play/Pause">▶️</button>
+        <button class="control-btn" id="nextBtn" title="Bài tiếp">⏭</button>
+        <button class="control-btn" id="fullscreenBtn" title="Fullscreen">🖥️</button>
+
+        <div class="volume-control">
+            <span>🔊</span>
+            <input type="range" id="volumeSlider" min="0" max="100" value="100">
+        </div>
+
+        <!-- Now Playing Info -->
+        <div class="now-playing-compact" id="nowPlaying" style="display: none;">
+            <img id="currentThumbnail" src="" alt="">
+            <div class="song-info">
+                <h4 id="currentTitle">---</h4>
+                <p id="currentAddedBy">---</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Share Modal -->
+    <div class="modal" id="shareModal">
+        <div class="modal-content">
+            <span class="close" id="closeShareModal">&times;</span>
+            <h2>Chia Sẻ Phòng</h2>
+            <div class="share-content">
+                <p>Chia sẻ Room ID hoặc link để mời bạn bè:</p>
+                <div class="share-id">
+                    <strong id="shareRoomId">------</strong>
+                    <button class="btn btn-small" id="copyIdBtn">📋 Copy</button>
+                </div>
+                <div class="share-link">
+                    <input type="text" id="shareLink" readonly>
+                    <button class="btn btn-small" id="copyLinkBtn">📋 Copy</button>
+                </div>
+                <div class="qr-code" id="qrCode">
+                    <p>📱 QR Code (Coming soon)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="js/room.js"></script>
+</body>
+
+</html>
