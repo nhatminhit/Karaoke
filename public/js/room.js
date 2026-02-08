@@ -1,19 +1,14 @@
-// ===================================
 // ROOM.JS - Room/Karaoke Logic
-// ===================================
 
 // Connect to Socket.io server
 const socket = io();
 
-// YouTube Player
 let player;
 let playerReady = false;
 
-// Room State
 let currentRoom = null;
 let currentUser = null;
 
-// DOM Elements
 const roomNameEl = document.getElementById('roomName');
 const roomIdDisplay = document.getElementById('roomIdDisplay');
 const memberCount = document.getElementById('memberCount');
@@ -53,17 +48,11 @@ const chatMessages = document.getElementById('chatMessages');
 const chatInput = document.getElementById('chatInput');
 const sendChatBtn = document.getElementById('sendChatBtn');
 
-// Upcoming Marquee
 const upcomingMarquee = document.getElementById('upcomingMarquee');
 const marqueeContent = document.getElementById('marqueeContent');
 let marqueeInterval;
 
-// ===================================
-// INITIALIZATION
-// ===================================
-
 window.addEventListener('DOMContentLoaded', async () => {
-    // Get Room ID from URL
     const urlParams = new URLSearchParams(window.location.search);
     const roomId = urlParams.get('roomId');
 
@@ -73,7 +62,6 @@ window.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // Get user info
     const savedUser = localStorage.getItem('karaokeUser');
     if (!savedUser) {
         alert('Vui lòng nhập tên trước khi tham gia phòng');
@@ -98,7 +86,6 @@ window.addEventListener('DOMContentLoaded', async () => {
         body.classList.remove('cinema-dim');
         clearTimeout(idleTimer);
         idleTimer = setTimeout(() => {
-            // Only dim if a song is playing
             if (currentRoom && currentRoom.currentSong) {
                 body.classList.add('cinema-dim');
             }
@@ -110,13 +97,8 @@ window.addEventListener('DOMContentLoaded', async () => {
     window.addEventListener('keypress', resetIdleTimer);
     resetIdleTimer();
 
-    // Generate QR Code for Remote Control
     generateQRCode(roomId);
 });
-
-// ===================================
-// QR CODE GENERATION
-// ===================================
 
 function generateQRCode(roomId) {
     const qrCodeCanvas = document.getElementById('qrCodeCanvas');
@@ -126,15 +108,12 @@ function generateQRCode(roomId) {
         return;
     }
 
-    // Clear any existing QR code
     qrCodeCanvas.innerHTML = '';
 
-    // Generate remote control URL
     const remoteUrl = `${window.location.origin}/remote.html?roomId=${roomId}`;
 
     try {
         // Create QR code using QRCode.js library
-        // Compact size for professional karaoke display
         new QRCode(qrCodeCanvas, {
             text: remoteUrl,
             width: 80,
@@ -152,21 +131,14 @@ function generateQRCode(roomId) {
 }
 
 
-// ===================================
-// YOUTUBE PLAYER API
-// ===================================
-
-// This function is called by YouTube IFrame API when ready
 window.onYouTubeIframeAPIReady = function () {
     player = new YT.Player('player', {
         height: '100%',
         width: '100%',
         playerVars: {
-            // Playback settings
             autoplay: 0,
             controls: 1,
 
-            // Professional Karaoke Settings
             rel: 0,                    // Don't show related videos at end
             modestbranding: 1,         // Minimal YouTube branding
             enablejsapi: 1,            // Enable JavaScript API
@@ -176,7 +148,6 @@ window.onYouTubeIframeAPIReady = function () {
             fs: 1,                     // Enable fullscreen button
             playsinline: 1,            // Play inline on mobile
 
-            // Additional professional settings
             disablekb: 0,              // Enable keyboard controls
             cc_load_policy: 0,         // Don't show captions by default
             origin: window.location.origin  // Security - specify origin
@@ -206,7 +177,6 @@ function onPlayerReady(event) {
 function onPlayerStateChange(event) {
     // YT.PlayerState.ENDED = 0
     if (event.data === YT.PlayerState.ENDED) {
-        // Auto play next song
         socket.emit('play-next', {
             roomId: currentRoom.roomId,
             userId: currentUser.userId
@@ -252,7 +222,6 @@ function onPlayerError(event) {
     const errorMsg = errorMessages[event.data] || 'Lỗi không xác định';
     addChatMessage('system', `❌ Lỗi phát video: ${errorMsg}. Tự động bỏ qua...`);
 
-    // Auto skip to next song after error
     setTimeout(() => {
         socket.emit('play-next', {
             roomId: currentRoom.roomId,
@@ -261,15 +230,11 @@ function onPlayerError(event) {
     }, 2000);
 }
 
-// ===================================
 // SOCKET.IO EVENT HANDLERS
-// ===================================
 
-// Successfully joined room
 socket.on('room-joined', (data) => {
     currentRoom = data.room;
 
-    // Update UI
     updateRoomInfo();
     updateQueue();
     updateMembers();
@@ -277,21 +242,18 @@ socket.on('room-joined', (data) => {
     console.log('Joined room:', currentRoom);
 });
 
-// New member joined
 socket.on('member-joined', (data) => {
     addChatMessage('system', `${data.userName} đã tham gia phòng`);
     memberCount.textContent = data.memberCount;
     membersCount.textContent = data.memberCount;
 });
 
-// Member left
 socket.on('member-left', (data) => {
     addChatMessage('system', `${data.userName} đã rời phòng`);
     memberCount.textContent = data.memberCount;
     membersCount.textContent = data.memberCount;
 });
 
-// Queue updated
 socket.on('queue-updated', (data) => {
     const wasEmpty = currentRoom.queue.length === 0;
     const hadNoCurrentSong = !currentRoom.currentSong;
@@ -313,17 +275,41 @@ socket.on('queue-updated', (data) => {
     }
 });
 
-// Song changed
 socket.on('song-changed', (data) => {
     console.log('🎵 Song changed event:', data.song?.title || 'No song');
     if (data.song) {
         playSong(data.song);
     } else {
-        stopPlayer();
+        noSong.style.display = 'flex';
+        nowPlaying.style.display = 'none';
     }
 });
 
-// Player state sync
+// Remote toggle play/pause
+socket.on('remote-toggle-play', (data) => {
+    console.log(`⏯️ Remote control: ${data.userName} toggled play/pause`);
+    if (!playerReady) return;
+
+    const state = player.getPlayerState();
+    if (state === YT.PlayerState.PLAYING) {
+        player.pauseVideo();
+    } else {
+        player.playVideo();
+    }
+    addChatMessage('system', `${data.userName} đã ${state === YT.PlayerState.PLAYING ? 'tạm dừng' : 'phát'} video`);
+});
+
+// Restart song (from prev button)
+socket.on('restart-song', (data) => {
+    console.log(`⏮️ Restart song: ${data.song.title}`);
+    if (!playerReady) return;
+
+    player.seekTo(0);
+    player.playVideo();
+
+    addChatMessage('system', `${data.userName} đã restart bài hát`);
+});
+
 socket.on('player-state', (data) => {
     if (!playerReady) return;
 
@@ -337,21 +323,14 @@ socket.on('player-state', (data) => {
     }
 });
 
-// Chat message
 socket.on('chat-message', (data) => {
     addChatMessage(data.userName, data.message);
 });
 
-// Error
 socket.on('error', (data) => {
     alert('Lỗi: ' + data.message);
 });
 
-// ===================================
-// ROOM CONTROLS
-// ===================================
-
-// Leave room
 leaveRoomBtn.addEventListener('click', () => {
     if (confirm('Bạn có chắc muốn rời phòng?')) {
         socket.emit('leave-room', {
@@ -362,10 +341,8 @@ leaveRoomBtn.addEventListener('click', () => {
     }
 });
 
-// Fullscreen toggle
 fullscreenBtn.addEventListener('click', () => {
     if (!document.fullscreenElement) {
-        // Enter fullscreen
         document.documentElement.requestFullscreen().then(() => {
             fullscreenBtn.innerHTML = '🖥️ Thoát Fullscreen';
             console.log('✅ Entered fullscreen mode');
@@ -374,7 +351,6 @@ fullscreenBtn.addEventListener('click', () => {
             alert('Không thể vào chế độ fullscreen');
         });
     } else {
-        // Exit fullscreen
         document.exitFullscreen().then(() => {
             fullscreenBtn.innerHTML = '🖥️ Fullscreen';
             console.log('✅ Exited fullscreen mode');
@@ -393,7 +369,6 @@ document.addEventListener('fullscreenchange', () => {
     }
 });
 
-// Share room
 shareBtn.addEventListener('click', () => {
     shareRoomId.textContent = currentRoom.roomId;
     shareLink.value = `${window.location.origin}/room.html?roomId=${currentRoom.roomId}`;
@@ -420,16 +395,13 @@ copyLinkBtn.addEventListener('click', () => {
     }, 2000);
 });
 
-// Open Remote Control
 openRemoteBtn.addEventListener('click', () => {
     const remoteUrl = `remote.html?roomId=${currentRoom.roomId}`;
     // Open in new window (simulating mobile device)
     window.open(remoteUrl, 'RemoteControl', 'width=400,height=800,menubar=no,toolbar=no,location=no,status=no');
 });
 
-// ===================================
 // SEARCH SONGS (YouTube)
-// ===================================
 
 searchBtn.addEventListener('click', searchSongs);
 
@@ -458,7 +430,6 @@ async function searchSongs() {
             return;
         }
 
-        // If API key is configured and we have results
         if (data.results && data.results.length > 0) {
             searchResults.innerHTML = data.results.map(video => `
                 <div class="search-result-item" onclick="addSongFromSearch('${video.videoId}', '${escapeHtml(video.title).replace(/'/g, "\\'")}', '${video.thumbnail}')">
@@ -519,7 +490,6 @@ window.addSongFromSearch = function (videoId, title, thumbnail) {
     }, 2000);
 };
 
-// Add song by Video ID
 window.addSongByVideoId = function () {
     const videoIdInput = document.getElementById('videoIdInput');
     const videoId = videoIdInput.value.trim();
@@ -529,7 +499,6 @@ window.addSongByVideoId = function () {
         return;
     }
 
-    // Add song to queue
     addSongToQueue({
         videoId: videoId,
         title: 'YouTube Video',
@@ -540,10 +509,6 @@ window.addSongByVideoId = function () {
     searchInput.value = '';
     searchResults.innerHTML = '';
 };
-
-// ===================================
-// QUEUE MANAGEMENT
-// ===================================
 
 function addSongToQueue(song) {
     socket.emit('add-song', {
@@ -584,10 +549,6 @@ window.removeSong = function (index) {
     });
 };
 
-// ===================================
-// PLAYER CONTROLS
-// ===================================
-
 playPauseBtn.addEventListener('click', () => {
     if (!playerReady) return;
 
@@ -603,7 +564,6 @@ playPauseBtn.addEventListener('click', () => {
 });
 
 prevBtn.addEventListener('click', () => {
-    // No previous functionality for now
     alert('Không thể quay lại bài trước');
 });
 
@@ -632,7 +592,6 @@ function syncPlayerState(state, currentTime) {
 function playSong(song) {
     if (!playerReady) {
         console.error('Player not ready, will retry when ready');
-        // Wait for player to be ready
         setTimeout(() => {
             if (playerReady) playSong(song);
         }, 1000);
@@ -650,7 +609,6 @@ function playSong(song) {
     currentRoom.currentSong = song;
 
     try {
-        // Load and play video
         player.loadVideoById({
             videoId: song.videoId,
             startSeconds: 0,
@@ -660,7 +618,6 @@ function playSong(song) {
         // Set quality after video starts loading (YouTube API needs time)
         setTimeout(() => {
             try {
-                // Check if player is still ready and video is loaded
                 if (!playerReady || !player.getPlayerState) return;
 
                 const playerState = player.getPlayerState();
@@ -689,10 +646,8 @@ function playSong(song) {
             }
         }, 2000);  // Increased delay for better reliability
 
-        // Add class for CSS
         document.body.classList.add('song-is-playing');
 
-        // Update Now Playing UI
         nowPlaying.style.display = 'flex';
         noSong.style.display = 'none';
         currentThumbnail.src = song.thumbnail;
@@ -701,7 +656,6 @@ function playSong(song) {
 
         addChatMessage('system', `▶️ Đang phát: ${song.title}`);
 
-        // Show autoplay prompt if player is not playing yet
         setTimeout(() => {
             const playerState = player.getPlayerState();
             if (playerState !== 1) { // Not playing
@@ -709,13 +663,11 @@ function playSong(song) {
             }
         }, 1000);
 
-        // Start tracking for marquee
         startMarqueeTracker();
     } catch (error) {
         console.error('Error playing song:', error);
         addChatMessage('system', `❌ Lỗi phát bài: ${song.title}`);
 
-        // Auto skip to next after error
         setTimeout(() => {
             socket.emit('play-next', {
                 roomId: currentRoom.roomId,
@@ -735,7 +687,6 @@ function stopPlayer() {
     nowPlaying.style.display = 'none';
     noSong.style.display = 'flex';
 
-    // Stop marquee
     stopMarqueeTracker();
 }
 
@@ -765,7 +716,6 @@ function updateMarqueeStatus() {
 
         // Show marquee when progress > 50% and queue is not empty
         if (currentTime > (duration / 2) && currentRoom.queue.length > 0) {
-            // Only show the NEXT song as requested
             const nextSong = currentRoom.queue[0];
             const songText = `1. ${nextSong.title} (Bởi @${nextSong.addedByName})`;
 
@@ -783,13 +733,8 @@ function updateMarqueeStatus() {
             }
         }
     } catch (e) {
-        // Ignore player errors
     }
 }
-
-// ===================================
-// MEMBERS
-// ===================================
 
 function updateMembers() {
     membersList.innerHTML = currentRoom.members.map(member => `
@@ -798,10 +743,6 @@ function updateMembers() {
     </div>
   `).join('');
 }
-
-// ===================================
-// CHAT
-// ===================================
 
 sendChatBtn.addEventListener('click', sendChat);
 
@@ -842,10 +783,6 @@ function addChatMessage(userName, message) {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-// ===================================
-// UI UPDATES
-// ===================================
-
 function updateRoomInfo() {
     roomNameEl.textContent = currentRoom.roomName;
     roomIdDisplay.textContent = currentRoom.roomId;
@@ -858,19 +795,11 @@ function updateRoomInfo() {
     }
 }
 
-// ===================================
-// UTILITY FUNCTIONS
-// ===================================
-
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
 }
-
-// ===================================
-// AUTOPLAY PROMPT
-// ===================================
 
 function showAutoplayPrompt() {
     const autoplayPrompt = document.getElementById('autoplayPrompt');
@@ -881,7 +810,6 @@ function showAutoplayPrompt() {
     console.log('💡 Showing autoplay prompt');
     autoplayPrompt.style.display = 'flex';
 
-    // Click handler
     autoplayBtn.onclick = () => {
         console.log('🎵 User clicked play button');
         if (playerReady && player.playVideo) {
@@ -898,17 +826,12 @@ function hideAutoplayPrompt() {
     }
 }
 
-// Hide prompt when video starts playing
 if (playPauseBtn) {
     const originalPlayPauseHandler = playPauseBtn.onclick;
     playPauseBtn.addEventListener('click', () => {
         hideAutoplayPrompt();
     });
 }
-
-// ===================================
-// ERROR HANDLING
-// ===================================
 
 socket.on('connect_error', (error) => {
     console.error('Connection error:', error);
@@ -920,7 +843,6 @@ socket.on('disconnect', () => {
     alert('Mất kết nối. Vui lòng reload trang.');
 });
 
-// Clean up on page unload
 window.addEventListener('beforeunload', () => {
     socket.emit('leave-room', {
         roomId: currentRoom?.roomId,

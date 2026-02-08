@@ -1,15 +1,11 @@
-// ===================================
 // REMOTE.JS - Mobile Remote Control
-// ===================================
 
 // Connect to Socket.io server
 const socket = io();
 
-// State
 let currentRoom = null;
 let currentUser = null;
 
-// DOM Elements
 const remoteRoomCode = document.getElementById('remoteRoomCode');
 const remoteRoomName = document.getElementById('remoteRoomName');
 const mobileSearchInput = document.getElementById('mobileSearchInput');
@@ -22,10 +18,6 @@ const joinScreen = document.getElementById('joinScreen');
 const remoteControlScreen = document.getElementById('remoteControlScreen');
 const joinRoomId = document.getElementById('joinRoomId');
 const joinBtn = document.getElementById('joinBtn');
-
-// ===================================
-// INITIALIZATION
-// ===================================
 
 window.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -91,15 +83,11 @@ function connectToRoom(roomId) {
     });
 }
 
-// ===================================
 // SOCKET.IO EVENT HANDLERS
-// ===================================
 
-// Successfully joined room
 socket.on('room-joined', (data) => {
     currentRoom = data.room;
 
-    // Update UI
     remoteRoomCode.textContent = currentRoom.roomId;
     remoteRoomName.textContent = currentRoom.roomName;
     updateQueuePreview();
@@ -108,7 +96,6 @@ socket.on('room-joined', (data) => {
     console.log('Remote joined room:', currentRoom);
 });
 
-// Queue updated
 socket.on('queue-updated', (data) => {
     if (currentRoom) {
         currentRoom.queue = data.queue;
@@ -116,23 +103,14 @@ socket.on('queue-updated', (data) => {
     }
 });
 
-// ===================================
-// PRIORITY CONTROL
-// ===================================
-
 window.setPriority = function (priority) {
     currentPriority = priority;
 
-    // Update UI
     document.querySelectorAll('.priority-btn').forEach(btn => {
         btn.classList.remove('active');
     });
     document.querySelector(`[data-priority="${priority}"]`).classList.add('active');
 };
-
-// ===================================
-// SEARCH SONGS
-// ===================================
 
 mobileSearchBtn.addEventListener('click', searchSongs);
 
@@ -166,7 +144,6 @@ async function searchSongs() {
             return;
         }
 
-        // If API key is configured and we have results
         if (data.results && data.results.length > 0) {
             mobileSearchResults.innerHTML = data.results.map(video => `
                 <div class="search-result-item" style="padding: 0.75rem; margin-bottom: 0.75rem; background: var(--bg-input); border-radius: 0.5rem; display: flex; align-items: center; gap: 0.75rem;">
@@ -222,7 +199,6 @@ async function searchSongs() {
     }
 }
 
-// Add song from search results
 window.addSongFromSearch = function (videoId, title, thumbnail, priority) {
     const song = {
         videoId: videoId,
@@ -257,10 +233,6 @@ window.addSongByVideoId = function (priority) {
     videoIdInput.value = '';
 };
 
-// ===================================
-// QUEUE MANAGEMENT
-// ===================================
-
 function addSongToQueue(song) {
     socket.emit('add-song', {
         roomId: currentRoom.roomId,
@@ -278,7 +250,6 @@ function updateQueuePreview() {
         return;
     }
 
-    // Show ALL songs in queue with action buttons
     mobileQueueList.innerHTML = currentRoom.queue.map((song, index) => `
         <div style="padding: 0.75rem; background: var(--bg-input); border-radius: 0.5rem; margin-bottom: 0.75rem;">
             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
@@ -310,11 +281,6 @@ function updateQueuePreview() {
     `).join('');
 }
 
-// ===================================
-// REMOTE CONTROL FUNCTIONS
-// ===================================
-
-// Playback controls
 window.remoteControl = function (action) {
     if (!currentRoom) return;
 
@@ -351,7 +317,6 @@ window.prioritizeSong = function (index) {
     });
 };
 
-// Remove song from queue
 window.removeSongRemote = function (index) {
     socket.emit('remove-song', {
         roomId: currentRoom.roomId,
@@ -360,19 +325,11 @@ window.removeSongRemote = function (index) {
     });
 };
 
-// ===================================
-// UTILITY FUNCTIONS
-// ===================================
-
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
 }
-
-// ===================================
-// ERROR HANDLING
-// ===================================
 
 socket.on('connect_error', (error) => {
     console.error('Connection error:', error);

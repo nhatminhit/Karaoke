@@ -15,8 +15,6 @@ const io = new Server(server, {
 });
 
 const PORT = process.env.PORT || 3000;
-
-// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
@@ -35,7 +33,6 @@ function generateRoomId() {
 
 // Helper function: Create new room
 function createRoom(roomName, hostId, type = 'public', roomId = null) {
-    // Use provided roomId or generate new one
     if (!roomId) {
         roomId = generateRoomId();
     }
@@ -71,16 +68,11 @@ function createRoom(roomName, hostId, type = 'public', roomId = null) {
 function addMemberToRoom(roomId, userId, userName, socketId) {
     const room = rooms.get(roomId);
     if (!room) return false;
-
-    // Check if room is full
     if (room.members.length >= room.settings.maxMembers) {
         return false;
     }
-
-    // Check if user already in room
     const existingMember = room.members.find(m => m.userId === userId);
     if (existingMember) {
-        // Update socket ID if reconnecting
         existingMember.socketId = socketId;
         existingMember.lastActiveAt = Date.now();
         return true;
@@ -138,9 +130,6 @@ function getPublicRooms() {
     });
     return publicRooms.sort((a, b) => b.memberCount - a.memberCount);
 }
-
-// REST API Endpoints
-
 // Get room details (or create if not exists)
 app.get('/api/rooms/:roomId', (req, res) => {
     const { roomId } = req.params;
@@ -154,8 +143,6 @@ app.get('/api/rooms/:roomId', (req, res) => {
 
     res.json({ success: true, room });
 });
-
-// Search YouTube videos
 app.get('/api/search', async (req, res) => {
     const { query } = req.query;
 
@@ -164,11 +151,9 @@ app.get('/api/search', async (req, res) => {
     }
 
     try {
-        // Using YouTube Data API if API key is available
         const apiKey = process.env.YOUTUBE_API_KEY;
 
         if (apiKey) {
-            // Official YouTube API
             const fetch = (await import('node-fetch')).default;
             const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query + ' karaoke')}&type=video&maxResults=10&key=${apiKey}`;
 
@@ -205,8 +190,6 @@ app.get('/api/search', async (req, res) => {
 // Socket.io Event Handlers
 io.on('connection', (socket) => {
     console.log(`🔌 User connected: ${socket.id}`);
-
-    // Join room
     socket.on('join-room', ({ roomId, userId, userName }) => {
         let room = rooms.get(roomId);
 
@@ -222,14 +205,8 @@ io.on('connection', (socket) => {
             socket.emit('error', { message: 'Cannot join room (room full or error)' });
             return;
         }
-
-        // Join socket room
         socket.join(roomId);
-
-        // Send room data to the user
         socket.emit('room-joined', { room });
-
-        // Notify other members
         socket.to(roomId).emit('member-joined', {
             userId,
             userName,
@@ -238,8 +215,6 @@ io.on('connection', (socket) => {
 
         console.log(`👤 ${userName} joined room ${roomId}`);
     });
-
-    // Leave room
     socket.on('leave-room', ({ roomId, userId }) => {
         const room = rooms.get(roomId);
         if (!room) return;
@@ -256,8 +231,6 @@ io.on('connection', (socket) => {
 
         console.log(`👋 User ${userId} left room ${roomId}`);
     });
-
-    // Add song to queue
     socket.on('add-song', ({ roomId, song, userId, priority }) => {
         const room = rooms.get(roomId);
         if (!room) return;
@@ -284,20 +257,14 @@ io.on('connection', (socket) => {
         }
 
         room.lastActiveAt = Date.now();
-
-        // Broadcast updated queue
         io.to(roomId).emit('queue-updated', { queue: room.queue });
     });
-
-    // Remove song from queue
     socket.on('remove-song', ({ roomId, songIndex, userId }) => {
         const room = rooms.get(roomId);
         if (!room) return;
 
         const member = room.members.find(m => m.userId === userId);
         if (!member) return;
-
-        // Anyone can remove any song
         const song = room.queue[songIndex];
         if (!song) return;
 
@@ -316,11 +283,7 @@ io.on('connection', (socket) => {
         if (!member) return;
 
         if (songIndex === 0 || songIndex >= room.queue.length) return;
-
-        // Remove song from current position
         const [song] = room.queue.splice(songIndex, 1);
-
-        // Add to front with high priority marker
         song.priority = 'high';
         room.queue.unshift(song);
 
@@ -335,24 +298,17 @@ io.on('connection', (socket) => {
             timestamp: Date.now()
         });
     });
-
-    // Play next song
     socket.on('play-next', ({ roomId, userId }) => {
         const room = rooms.get(roomId);
         if (!room) return;
 
         const member = room.members.find(m => m.userId === userId);
         if (!member) return;
-
-        // Anyone can play next song
-
         if (room.queue.length === 0) {
             room.currentSong = null;
             io.to(roomId).emit('song-changed', { song: null });
             return;
         }
-
-        // Get next song from queue
         const nextSong = room.queue.shift();
         room.currentSong = {
             ...nextSong,
@@ -360,12 +316,38 @@ io.on('connection', (socket) => {
         };
         room.stats.totalSongsPlayed++;
         room.lastActiveAt = Date.now();
-
-        // Broadcast song change
         io.to(roomId).emit('song-changed', { song: room.currentSong });
         io.to(roomId).emit('queue-updated', { queue: room.queue });
 
         console.log(`▶️ Playing song in room ${roomId}: ${nextSong.title}`);
+    });
+
+    // Toggle play/pause
+    socket.on('toggle-play', ({ roomId, userId }) => {
+        const room = rooms.get(roomId);
+        if (!room) return;
+
+        const member = room.members.find(m => m.userId === userId);
+        if (!member) return;
+        // The actual play/pause is handled by clients
+        socket.to(roomId).emit('remote-toggle-play', { userId, userName: member.userName });
+        console.log(`⏯️ ${member.userName} toggled play/pause in room ${roomId}`);
+    });
+
+    // Play previous song (restart current song)
+    socket.on('play-prev', ({ roomId, userId }) => {
+        const room = rooms.get(roomId);
+        if (!room) return;
+
+        const member = room.members.find(m => m.userId === userId);
+        if (!member) return;
+        if (room.currentSong) {
+            io.to(roomId).emit('restart-song', {
+                song: room.currentSong,
+                userName: member.userName
+            });
+            console.log(`⏮️ ${member.userName} restarted current song in room ${roomId}`);
+        }
     });
 
     // Player state sync (play/pause/seek)
@@ -375,16 +357,10 @@ io.on('connection', (socket) => {
 
         const member = room.members.find(m => m.userId === userId);
         if (!member) return;
-
-        // Anyone can control player
-
-        // Broadcast player state to all except sender
         socket.to(roomId).emit('player-state', { state, currentTime, timestamp: Date.now() });
 
         room.lastActiveAt = Date.now();
     });
-
-    // Chat message
     socket.on('chat-message', ({ roomId, userId, message }) => {
         const room = rooms.get(roomId);
         if (!room) return;
@@ -402,12 +378,8 @@ io.on('connection', (socket) => {
         io.to(roomId).emit('chat-message', chatMessage);
         room.lastActiveAt = Date.now();
     });
-
-    // Disconnect
     socket.on('disconnect', () => {
         console.log(`❌ User disconnected: ${socket.id}`);
-
-        // Find and remove user from all rooms
         rooms.forEach((room, roomId) => {
             const member = room.members.find(m => m.socketId === socket.id);
             if (member) {
@@ -421,8 +393,6 @@ io.on('connection', (socket) => {
         });
     });
 });
-
-// Start server
 server.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
     console.log(`💡 Rooms will be auto-created when users join`);
